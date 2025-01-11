@@ -64,7 +64,38 @@ class Queue{
             deQueue(candidate);
         }
     }
+
+   
+    void assignInterviewSlot() {
+        if (isEmpty()) {
+            cout << "No candidates in the queue to assign an interview slot.\n";
+        } else {
+            cout << "Interview slot assigned to the first candidate in the queue.\n";
+            front->candidate.display();
+        }
+    }
+
+    int getTotalInterviewees() const {
+        return numItems;
+    }
+
+      void viewCurrentQueue() const {
+        if (isEmpty()) {
+            cout << "The queue is empty.\n";
+        } else {
+            QueueNode* current = front;
+            cout << "Current queue of interviewees: \n";
+            while (current != nullptr) {
+                current->candidate.display();
+                current = current->next;
+            }
+        }
+    }
+
 };
+
+  
+
 
 int main (){
 
