@@ -1,6 +1,13 @@
 #include<iostream>
-
 using namespace std;
+struct Candidate {
+    string name;
+    int id;
+    int age;
+    int slot;
+    string status;
+    Candidate *next;
+};
 
 class Queue{
     private:
@@ -88,7 +95,6 @@ class Queue{
             QueueNode* current = front;
             cout << "Current queue of interviewees: \n";
         while (current != nullptr) {
-            // Assuming candidate has member variables `name` and `id`.
             cout << "Candidate Name: " << current->candidate.name << "\n";
             cout << "Candidate ID: " << current->candidate.id << "\n";
             current = current->next;
@@ -97,10 +103,95 @@ class Queue{
     }
 };
 
-  
-
-
-int main (){
+int main() {
+    Queue interviewQueue;
+    int choice;
+    int nextId = 1001; 
+    
+    do {
+        cout << "\n=== Interview Queue Management System ===\n";
+        cout << "1. Add New Candidate\n";
+        cout << "2. Process Next Candidate\n";
+        cout << "3. Assign Interview Slot\n";
+        cout << "4. View Current Queue\n";
+        cout << "5. View Total Candidates\n";
+        cout << "6. Exit\n";
+        cout << "Enter your choice (1-6): ";
+        cin >> choice;
+        
+        switch (choice) {
+            case 1: {
+                Candidate newCandidate;
+                cin.ignore(); 
+                
+                cout << "Enter candidate name: ";
+                getline(cin, newCandidate.name);
+                
+                newCandidate.id = nextId++;
+                cout << "Assigned ID: " << newCandidate.id << endl;
+                
+                cout << "Enter candidate age: ";
+                cin >> newCandidate.age;
+                
+                do {
+                    cout << "Enter preferred slot (1-5): ";
+                    cin >> newCandidate.slot;
+                    if (newCandidate.slot < 1 || newCandidate.slot > 5) {
+                        cout << "Invalid slot! Please enter a number between 1 and 5.\n";
+                    }
+                } while (newCandidate.slot < 1 || newCandidate.slot > 5);
+                
+                newCandidate.status = "Waiting";
+                newCandidate.next = nullptr;
+                
+                interviewQueue.enQueue(newCandidate);
+                cout << "Candidate added successfully!\n";
+                system("cls");
+                break;
+            }
+            
+            case 2: {
+                Candidate processedCandidate;
+                if (!interviewQueue.isEmpty()) {
+                    interviewQueue.deQueue(processedCandidate);
+                    cout << "Processing candidate:\n";
+                    cout << "ID: " << processedCandidate.id << endl;
+                    cout << "Name: " << processedCandidate.name << endl;
+                    cout << "Age: " << processedCandidate.age << endl;
+                    cout << "Slot: " << processedCandidate.slot << endl;
+                }
+                system("cls");
+                break;
+            }
+            
+            case 3: {
+                interviewQueue.assignInterviewSlot();
+                break;
+            }
+            
+            case 4: {
+                interviewQueue.viewCurrentQueue();
+                break;
+            }
+            
+            case 5: {
+                cout << "Total candidates in queue: " 
+                     << interviewQueue.getTotalInterviewees() << endl;
+                break;
+            }
+            
+            case 6: {
+                cout << "Exiting program. Goodbye!\n";
+                break;
+            }
+            
+            default: {
+                cout << "Invalid choice! Please try again.\n";
+                system("cls");
+                break;
+            }
+        }
+    } while (choice != 6);
 
     return 0;
 }
