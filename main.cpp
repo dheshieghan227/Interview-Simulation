@@ -67,31 +67,34 @@ class Queue{
 
    
     void assignInterviewSlot() {
-        if (isEmpty()) {
-            cout << "No candidates in the queue to assign an interview slot.\n";
-        } else {
-            cout << "Interview slot assigned to the first candidate in the queue.\n";
-            front->candidate.display();
-        }
+    if (isEmpty()) {
+        cout << "No candidates in the queue to assign an interview slot.\n";
+    } else {
+        cout << "Interview slot assigned to the first candidate in the queue.\n";
+        // Assuming candidate has member variables `name` and `id`.
+        cout << "Candidate Name: " << front->candidate.name << "\n";
+        cout << "Candidate ID: " << front->candidate.id << "\n";
     }
+    }   
 
     int getTotalInterviewees() const {
         return numItems;
     }
 
-      void viewCurrentQueue() const {
+    void viewCurrentQueue() const {
         if (isEmpty()) {
             cout << "The queue is empty.\n";
         } else {
             QueueNode* current = front;
             cout << "Current queue of interviewees: \n";
-            while (current != nullptr) {
-                current->candidate.display();
-                current = current->next;
+        while (current != nullptr) {
+            // Assuming candidate has member variables `name` and `id`.
+            cout << "Candidate Name: " << current->candidate.name << "\n";
+            cout << "Candidate ID: " << current->candidate.id << "\n";
+            current = current->next;
             }
         }
     }
-
 };
 
   
