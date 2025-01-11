@@ -1,5 +1,7 @@
 #include<iostream>
+#include <windows.h>
 using namespace std;
+
 struct Candidate {
     string name;
     int id;
@@ -9,29 +11,39 @@ struct Candidate {
     Candidate *next;
 };
 
+const string TIME_SLOTS[] = {
+    "9:00 AM - 10:00 AM",  // Slot 1
+    "10:30 AM - 11:30 AM", // Slot 2
+    "1:00 PM - 2:00 PM",   // Slot 3
+    "2:30 PM - 3:30 PM",   // Slot 4
+    "4:00 PM - 5:00 PM"    // Slot 5
+};
+
 class Queue{
     private:
-        struct QueueNode
-        {
-            Candidate candidate;
-            QueueNode* next;
-        };
-        
-        QueueNode* front;
-        QueueNode* rear;
+        Candidate* front;
+        Candidate* rear;
+        Candidate* processedFront;
         int numItems;
 
     public:
     //Constructor
-    Queue() : front(nullptr), rear(nullptr), numItems(0) {}
+    Queue() : front(nullptr), rear(nullptr), processedFront(nullptr), numItems(0) {}
 
     //Destructor
-    ~Queue() {clear();}
+    ~Queue() {
+        clear();
+        while (processedFront != nullptr) {
+            Candidate* temp = processedFront;
+            processedFront = processedFront->next;
+            delete temp;
+        }
+    }
 
     //Destroy Queue
     void enQueue(const Candidate& item){
-        QueueNode* newNode = new QueueNode;
-        newNode->candidate = item;
+        Candidate* newNode = new Candidate;
+        *newNode = item;
         newNode->next = nullptr;
 
         if(isEmpty()){
@@ -44,18 +56,34 @@ class Queue{
         numItems++;
     }
 
-    void deQueue(Candidate& item){
-        QueueNode* temp = nullptr;
+    void deQueue(Candidate& item) {
+        Candidate* temp = nullptr;
 
-        if (isEmpty()){
+        if (isEmpty()) {
             cout << "The queue is empty.\n";
-        } else{
-            item = front->candidate;
+        } else {
+            item = *front;
+            
+            Candidate* processedNode = new Candidate;
+            *processedNode = item;
+            processedNode->status = "Processed";
+            processedNode->next = nullptr;
+
+            if (processedFront == nullptr) {
+                processedFront = processedNode;
+            } else {
+                Candidate* current = processedFront;
+                while (current->next != nullptr) {
+                    current = current->next;
+                }
+                current->next = processedNode;
+            }
+
             temp = front;
             front = front->next;
             delete temp;
-            numItems--;
-            if(front == nullptr){
+            numItems = numItems - 1;
+            if(front == nullptr) {
                 rear = nullptr;
             }
         }
@@ -72,16 +100,36 @@ class Queue{
         }
     }
 
-   
     void assignInterviewSlot() {
-    if (isEmpty()) {
-        cout << "No candidates in the queue to assign an interview slot.\n";
-    } else {
-        cout << "Interview slot assigned to the first candidate in the queue.\n";
-        // Assuming candidate has member variables `name` and `id`.
-        cout << "Candidate Name: " << front->candidate.name << "\n";
-        cout << "Candidate ID: " << front->candidate.id << "\n";
-    }
+        if (isEmpty()) {
+            cout << "No candidates in the queue to assign an interview slot.\n";
+        } else {
+            cout << "\nAssigning slot for the first candidate in queue:\n";
+            cout << "--------------------------------\n";
+            cout << "Candidate Name: " << front->name << "\n";
+            cout << "Candidate ID: " << front->id << "\n";
+            cout << "\nAvailable Time Slots:\n";
+            for (int i = 0; i < 5; i++) {
+                cout << i + 1 << ". " << TIME_SLOTS[i] << "\n";
+            }
+            
+            int selectedSlot;
+            do {
+                cout << "\nSelect interview slot (1-5): ";
+                cin >> selectedSlot;
+                if (selectedSlot < 1 || selectedSlot > 5) {
+                    cout << "Invalid slot! Please select between 1-5.\n";
+                }
+            } while (selectedSlot < 1 || selectedSlot > 5);
+            
+            front->slot = selectedSlot;
+            cout << "\nSlot assigned successfully!\n";
+            cout << "Candidate: " << front->name << "\n";
+            cout << "Assigned Time: " << TIME_SLOTS[selectedSlot - 1] << "\n";
+            cout << "\nProcessing...";
+            Sleep(3000);
+            system("cls");
+        }
     }   
 
     int getTotalInterviewees() const {
@@ -89,16 +137,57 @@ class Queue{
     }
 
     void viewCurrentQueue() const {
-        if (isEmpty()) {
-            cout << "The queue is empty.\n";
-        } else {
-            QueueNode* current = front;
-            cout << "Current queue of interviewees: \n";
-        while (current != nullptr) {
-            cout << "Candidate Name: " << current->candidate.name << "\n";
-            cout << "Candidate ID: " << current->candidate.id << "\n";
-            current = current->next;
+        if (!isEmpty()) {
+            cout << "\nWAITING CANDIDATES:\n";
+            cout << "--------------------------------\n";
+            Candidate* current = front;
+            while (current != nullptr) {
+                cout << "Name: " << current->name << "\n";
+                cout << "ID: " << current->id << "\n";
+                cout << "Age: " << current->age << "\n";
+                cout << "Time Slot: Waiting to be processed" << endl;
+                cout << "Status: Waiting\n";
+                cout << "--------------------------------\n";
+                current = current->next;
             }
+        }
+
+        if (processedFront != nullptr) {
+            cout << "\nPROCESSED CANDIDATES:\n";
+            cout << "--------------------------------\n";
+            Candidate* current = processedFront;
+            while (current != nullptr) {
+                cout << "Name: " << current->name << "\n";
+                cout << "ID: " << current->id << "\n";
+                cout << "Age: " << current->age << "\n";
+                cout << "Time Slot: ";
+                if (current->slot > 0 && current->slot <= 5) {
+                    cout << TIME_SLOTS[current->slot - 1];
+                } else {
+                    cout << "Waiting to be processed";
+                }
+                cout << endl;
+                cout << "Status: " << current->status << "\n";
+                cout << "--------------------------------\n";
+                current = current->next;
+            }
+        }
+
+        if (isEmpty() && processedFront == nullptr) {
+            cout << "\nNo candidates in the system.\n";
+        }
+    }
+
+    Candidate getFrontCandidate() const {
+        if (!isEmpty()) {
+            return *front;
+        }
+        throw runtime_error("Queue is empty");
+    }
+
+    void setFrontSlot(int slot) {
+        if (!isEmpty() && slot >= 1 && slot <= 5) {
+            front->slot = slot;
         }
     }
 };
@@ -109,14 +198,14 @@ int main() {
     int nextId = 1001; 
     
     do {
-        cout << "\n=== Interview Queue Management System ===\n";
+        system("cls");
+        cout << "\n=== Interview Simulation System ===\n";
         cout << "1. Add New Candidate\n";
-        cout << "2. Process Next Candidate\n";
-        cout << "3. Assign Interview Slot\n";
-        cout << "4. View Current Queue\n";
-        cout << "5. View Total Candidates\n";
-        cout << "6. Exit\n";
-        cout << "Enter your choice (1-6): ";
+        cout << "2. Process Next Candidate & Assign Slot\n";
+        cout << "3. View Current Queue\n";
+        cout << "4. View Total Candidates\n";
+        cout << "5. Exit\n";
+        cout << "\nEnter your choice (1-5): ";
         cin >> choice;
         
         switch (choice) {
@@ -124,28 +213,23 @@ int main() {
                 Candidate newCandidate;
                 cin.ignore(); 
                 
-                cout << "Enter candidate name: ";
+                cout << "\nEnter candidate name: ";
                 getline(cin, newCandidate.name);
                 
                 newCandidate.id = nextId++;
-                cout << "Assigned ID: " << newCandidate.id << endl;
+                cout << "\nAssigned ID: " << newCandidate.id << endl;
                 
-                cout << "Enter candidate age: ";
+                cout << "\nEnter candidate age: ";
                 cin >> newCandidate.age;
-                
-                do {
-                    cout << "Enter preferred slot (1-5): ";
-                    cin >> newCandidate.slot;
-                    if (newCandidate.slot < 1 || newCandidate.slot > 5) {
-                        cout << "Invalid slot! Please enter a number between 1 and 5.\n";
-                    }
-                } while (newCandidate.slot < 1 || newCandidate.slot > 5);
                 
                 newCandidate.status = "Waiting";
                 newCandidate.next = nullptr;
                 
                 interviewQueue.enQueue(newCandidate);
-                cout << "Candidate added successfully!\n";
+                cout << "\nCandidate added successfully!\n";
+                cout << "Time Slot: Waiting to be processing\n";
+                cout << "\nProcessing application...";
+                Sleep(3000);
                 system("cls");
                 break;
             }
@@ -153,35 +237,74 @@ int main() {
             case 2: {
                 Candidate processedCandidate;
                 if (!interviewQueue.isEmpty()) {
-                    interviewQueue.deQueue(processedCandidate);
-                    cout << "Processing candidate:\n";
-                    cout << "ID: " << processedCandidate.id << endl;
-                    cout << "Name: " << processedCandidate.name << endl;
-                    cout << "Age: " << processedCandidate.age << endl;
-                    cout << "Slot: " << processedCandidate.slot << endl;
+                    try {
+                        Candidate frontCandidate = interviewQueue.getFrontCandidate();
+                        cout << "\nProcessing next candidate:\n";
+                        cout << "--------------------------------\n";
+                        cout << "ID: " << frontCandidate.id << endl;
+                        cout << "Name: " << frontCandidate.name << endl;
+                        cout << "Age: " << frontCandidate.age << endl;
+                        cout << "--------------------------------\n";
+
+                        cout << "\nAvailable Time Slots:\n";
+                        for (int i = 0; i < 5; i++) {
+                            cout << i + 1 << ". " << TIME_SLOTS[i] << "\n";
+                        }
+                        
+                        int selectedSlot;
+                        do {
+                            cout << "\nSelect interview slot (1-5): ";
+                            cin >> selectedSlot;
+                            if (selectedSlot < 1 || selectedSlot > 5) {
+                                cout << "Invalid slot! Please select between 1-5.\n";
+                            }
+                        } while (selectedSlot < 1 || selectedSlot > 5);
+
+                        interviewQueue.setFrontSlot(selectedSlot);
+                        
+                        interviewQueue.deQueue(processedCandidate);
+                        
+                        cout << "\nCandidate processed successfully!\n";
+                        cout << "Assigned Time: " << TIME_SLOTS[selectedSlot - 1] << "\n";
+                        cout << "\nProcessing...";
+                        Sleep(3000);
+                    } catch (runtime_error& e) {
+                        cout << e.what() << endl;
+                        Sleep(2000);
+                    }
+                } else {
+                    cout << "\nNo candidates in the queue to process.\n";
+                    Sleep(2000);
                 }
                 system("cls");
                 break;
             }
             
             case 3: {
-                interviewQueue.assignInterviewSlot();
+                system("cls");
+                cout << "\n=== Interview Queue Status ===\n";
+                interviewQueue.viewCurrentQueue();
+                cout << "\nPress Enter to return to main menu...";
+                cin.ignore();
+                cin.get();
+                system("cls");
                 break;
             }
             
             case 4: {
-                interviewQueue.viewCurrentQueue();
+                system("cls");
+                cout << "Total candidates in queue: " 
+                     << interviewQueue.getTotalInterviewees() << endl;
+                cout << "\nPress Enter to return to main menu...";
+                cin.ignore();
+                cin.get();
+                system("cls");
                 break;
             }
             
             case 5: {
-                cout << "Total candidates in queue: " 
-                     << interviewQueue.getTotalInterviewees() << endl;
-                break;
-            }
-            
-            case 6: {
-                cout << "Exiting program. Goodbye!\n";
+                system("cls");
+                cout << "\n\nExiting the Interview Simulation System... Goodbye!\n\n";
                 break;
             }
             
@@ -191,7 +314,7 @@ int main() {
                 break;
             }
         }
-    } while (choice != 6);
+    } while (choice != 5);
 
     return 0;
 }
